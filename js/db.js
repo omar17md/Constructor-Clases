@@ -1,5 +1,5 @@
 const valoresDefault = {
-    string : 'string.empty',
+    string : 'string.Empty',
     int : 0,
     bool : false,
     float : 0,

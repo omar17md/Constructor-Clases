@@ -4,7 +4,13 @@ const tabla = document.querySelector('#box-elementos');
 const numeroRenglones = document.querySelector('#numero');
 const nombreClase = document.querySelector('#clase');
 const continuar = document.querySelector('#btnContinuar');
+const checkConstructor = document.querySelector('#constructor');
 const opciones = document.querySelector('#box-opciones');
+
+const bodyModal = document.querySelector('#bodyModal');
+const headerModal = document.querySelector('#headerModal');
+
+let clase = "";
 
 infoClase.addEventListener('submit', (e) => {
     e.preventDefault(); 
@@ -13,8 +19,7 @@ infoClase.addEventListener('submit', (e) => {
     AgregarEncabezados();
     AgregarRenglones(Number(numeroRenglones.value));
     AgregarOpciones();
-
-
+    numeroRenglones.disabled = true;
 });
 
 function AgregarEncabezados(){
@@ -73,7 +78,7 @@ function AgregarRenglones(num){
                 <input type="text" name="NombreAtributo" id="${'atributo-'+i}">
             </div>
             <div class="col">
-                <input type="text" name="Default" id="${'default-'+i}" value="string.empty">
+                <input type="text" name="Default" id="${'default-'+i}" value="string.Empty">
             </div>
         `;
 
@@ -82,7 +87,7 @@ function AgregarRenglones(num){
 }
 
 function AgregarRenglon(){
-    let i = numeroRenglones.value + 1;
+    let i = numeroRenglones.value;
     numeroRenglones.value++;
 
     const row = document.createElement('div');
@@ -121,7 +126,7 @@ function AgregarRenglon(){
             </div>
         `;
 
-        tabla.appendChild(row);
+    tabla.appendChild(row);
 }
 
 function AgregarOpciones(){
@@ -133,10 +138,10 @@ function AgregarOpciones(){
                 <button type="button" class="btn btn-warning" onclick="LimpiarPantalla();">Reiniciar</button>
             </div>
             <div class="col">
-                <button type="button" class="btn btn-info" onclick="AgregarRenglon();">Agregar Renglon</button>
+                <button type="button" class="btn btn-success" onclick="GeneraClase();">Generar Clase</button>
             </div>
             <div class="col">
-                <button type="button" class="btn btn-success">Generar Clase</button>
+                <button type="button" class="btn btn-info" onclick="AgregarRenglon();">Agregar Renglon</button>
             </div>
         `;
 
@@ -155,6 +160,7 @@ function LimpiarPantalla(){
     nombreClase.value = '';
     numeroRenglones.value = '';
     continuar.removeAttribute("hidden", ''); 
+    numeroRenglones.disabled = false;
 }
 
 function CambioTipoDato(idSelect, idinput){
@@ -162,4 +168,66 @@ function CambioTipoDato(idSelect, idinput){
     let valorDefault = document.getElementById(idinput);
 
     valorDefault.value = valoresDefault[optionSelect.value];
+}
+
+function GeneraClase(){
+    modal.style.display = "block";
+
+    const nombreClaseMayus = nombreClase.value[0].toUpperCase() + nombreClase.value.substr(1);
+    const atributos = [];
+    const propiedades = [];
+    const constructor = [];
+    let campoVacio = false;
+
+    for(let i = 0; i < numeroRenglones.value; i++){
+        let rowAcceso = document.getElementById('select1-'+i).value;
+        let rowDato = document.getElementById('select2-'+i).value;
+        let rowNombre = document.getElementById('atributo-'+i).value;
+        let rowDefault = document.getElementById('default-'+i).value;
+
+        if(rowNombre == ""){
+            campoVacio = true;
+            break;
+        }
+        let nombrePropiedad = rowNombre[0].toUpperCase() + rowNombre.substr(1);
+        
+
+        atributos.push(`${rowAcceso} ${rowDato} ${rowNombre};`);
+        propiedades.push(`public ${rowDato} ${nombrePropiedad} { get => ${rowNombre}; set => SetField(ref ${rowNombre}, value, "${nombrePropiedad}"); }`);
+
+        constructor.push(`\t${rowNombre} = ${rowDefault};`);
+    }
+
+    if(!campoVacio){
+        clase = checkConstructor.checked ? 
+                `public class ${nombreClaseMayus} : NotificacionBase\n{\n\t` + atributos.join("\n\t") + "\n\n\t" + propiedades.join("\n\t") + "\n\n\t" + `public ${nombreClaseMayus}()\n\t{\n\t${constructor.join("\n\t")}\n\t}` + "\n}"
+                : "//Agregar a los atributos\n" + atributos.join("\n") + "\n\n//Agregar a las propiedades\n" + propiedades.join("\n") + "\n\n//Agregar al constructor\n" + constructor.join("\n");
+
+        bodyModal.innerHTML = clase;
+        headerModal.innerHTML = "Codigo generado de la clase: " + nombreClaseMayus;
+    }
+    else{
+        modal.style.display = "none";
+        alert("Faltan campos por llenar");
+    }
+    
+}
+
+function Copiar(){
+    navigator.clipboard.writeText(clase);
+}
+
+/*********** Modal ***********/
+var modal = document.getElementById("myModal");
+
+var span = document.getElementsByClassName("close")[0];
+
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
 }
